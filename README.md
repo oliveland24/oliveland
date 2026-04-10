@@ -1,8 +1,16 @@
-# 공인중개사 고객관리 및 매물관리 프로그램 (OliveLand)
+# React + Vite
 
-이 프로젝트는 공인중개사 방문 고객 및 계약, 일정을 관리하기 위해 제작되는 웹 애플리케이션입니다.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 기능 목록 (예정)
-- 고객 정보 입력 및 관리
-- 상담 히스토리 작성
-- 모바일(스마트폰) 호환 인터페이스
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
