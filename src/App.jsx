@@ -11,6 +11,7 @@ function App() {
   
   // 모달(팝업) 열림/닫힘 상태 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomerId, setEditingCustomerId] = useState(null);
   
   // 필터 및 정렬 상태 관리
   const [filterType, setFilterType] = useState('전체');
@@ -19,7 +20,8 @@ function App() {
   
   // 새 고객 입력 폼 데이터 관리
   const [formData, setFormData] = useState({
-    name: '', phone: '', type: '매수인', requirement: '', status: '가망고객', memo: ''
+    name: '', phone: '', type: '매수인', requirement: '', status: '가망고객', memo: '',
+    propertyAddress: '', ownerAddress: ''
   });
 
   // 입력칸에 글씨를 쓸 때마다 formData를 업데이트해주는 함수
@@ -47,15 +49,50 @@ function App() {
   // '저장하기' 버튼을 눌렀을 때 실행되는 함수
   const handleSubmit = (e) => {
     e.preventDefault(); // 페이지 새로고침 방지
-    const newCustomer = {
-      ...formData,
-      id: Date.now() // 임시로 현재 시간을 고유 ID로 사용
-    };
-    // 기존 고객 명단 맨 위에 새 고객 추가
-    setCustomers([newCustomer, ...customers]);
+    
+    if (editingCustomerId) {
+      // 기존 고객 정보 수정
+      setCustomers(customers.map(c => 
+        c.id === editingCustomerId ? { ...c, ...formData } : c
+      ));
+    } else {
+      // 새 고객 추가
+      const newCustomer = {
+        ...formData,
+        id: Date.now() // 임시로 현재 시간을 고유 ID로 사용
+      };
+      setCustomers([newCustomer, ...customers]);
+    }
+    
     // 폼 초기화 및 모달 닫기
-    setFormData({ name: '', phone: '', type: '매수인', requirement: '', status: '가망고객', memo: '' });
+    setFormData({ name: '', phone: '', type: '매수인', requirement: '', status: '가망고객', memo: '', propertyAddress: '', ownerAddress: '' });
+    setEditingCustomerId(null);
     setIsModalOpen(false);
+  };
+
+  // 고객 행 클릭 시 수정 모달 열기
+  const handleEditClick = (customer) => {
+    setFormData({
+      name: customer.name || '',
+      phone: customer.phone || '',
+      type: customer.type || '매수인',
+      requirement: customer.requirement || '',
+      status: customer.status || '가망고객',
+      memo: customer.memo || '',
+      propertyAddress: customer.propertyAddress || '',
+      ownerAddress: customer.ownerAddress || ''
+    });
+    setEditingCustomerId(customer.id);
+    setIsModalOpen(true);
+  };
+
+  // 고객 삭제
+  const handleDelete = () => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      setCustomers(customers.filter(c => c.id !== editingCustomerId));
+      setEditingCustomerId(null);
+      setIsModalOpen(false);
+    }
   };
 
   // 필터와 정렬이 적용된 최종 고객 리스트 계산
@@ -92,8 +129,12 @@ function App() {
             <h1>고객 현황</h1>
             <p className="subtitle">사장님의 소중한 고객들을 한눈에 관리하세요.</p>
           </div>
-          {/* 새 고객 등록 버튼을 누르면 모달을 엽니다 */}
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+          {/* 새 고객 등록 버튼을 누르면 초기화 후 모달을 엽니다 */}
+          <button className="btn-primary" onClick={() => {
+            setEditingCustomerId(null);
+            setFormData({ name: '', phone: '', type: '매수인', requirement: '', status: '가망고객', memo: '', propertyAddress: '', ownerAddress: '' });
+            setIsModalOpen(true);
+          }}>
             + 새 고객 등록
           </button>
         </header>
@@ -132,7 +173,7 @@ function App() {
             </thead>
             <tbody>
               {displayedCustomers.map((c) => (
-                <tr key={c.id}>
+                <tr key={c.id} onClick={() => handleEditClick(c)} style={{ cursor: 'pointer' }} className="customer-row" title="클릭하여 상세 보기 및 수정">
                   <td>
                     <div className="fw-600">{c.name}</div>
                     <div className="text-muted">{c.phone}</div>
@@ -168,7 +209,7 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <h2>새 고객 등록</h2>
+              <h2>{editingCustomerId ? '고객 정보 상세/수정' : '새 고객 등록'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}>✕</button>
             </div>
             
@@ -209,14 +250,34 @@ function App() {
                 <input type="text" name="requirement" placeholder="예: 강남구 2~30평대 아파트, 예산 10억" value={formData.requirement} onChange={handleInputChange} />
               </div>
 
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>물건지 주소</label>
+                  <input type="text" name="propertyAddress" placeholder="예: 서울 송파구 올림픽로 123" value={formData.propertyAddress} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>소유자 주소 (다를 경우)</label>
+                  <input type="text" name="ownerAddress" placeholder="예: 서울 강남구 테헤란로 456" value={formData.ownerAddress} onChange={handleInputChange} />
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>초기 상담 메모</label>
                 <textarea name="memo" rows="3" placeholder="특이사항이나 다음 일정 등을 메모하세요." value={formData.memo} onChange={handleInputChange}></textarea>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>취소</button>
-                <button type="submit" className="btn-primary">저장하기</button>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  {editingCustomerId && (
+                    <button type="button" className="btn-secondary" style={{ color: '#ef4444', borderColor: '#fca5a5', backgroundColor: '#fef2f2' }} onClick={handleDelete}>
+                      삭제
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <button type="button" className="btn-secondary" style={{ marginRight: '8px' }} onClick={() => setIsModalOpen(false)}>취소</button>
+                  <button type="submit" className="btn-primary">{editingCustomerId ? '수정하기' : '저장하기'}</button>
+                </div>
               </div>
             </form>
           </div>
